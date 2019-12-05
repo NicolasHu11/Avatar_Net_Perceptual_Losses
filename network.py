@@ -24,6 +24,18 @@ class AvatarNet(nn.Module):
         self.decorator = StyleDecorator()
 
     def forward(self, content, styles, style_strength=1.0, patch_size=3, patch_stride=1, masks=None, interpolation_weights=None, preserve_color=False, train=False):
+        
+        """
+            styles is a list, could be either 1 or 2. 
+            1, is the original avatar net, 
+            2, is the added feature, of having two features
+            
+            however, in the original tf repo, styles is also a list, not sure why is that
+        
+
+        """
+        
+
         if interpolation_weights is None:
             interpolation_weights = [1/len(styles)] * len(styles)
         if masks is None:
@@ -31,6 +43,8 @@ class AvatarNet(nn.Module):
 
         # encode content image
         content_feature = self.encoder(content)
+
+
         style_features = []
         for style in styles:
             style_features.append(self.encoder(style))
@@ -42,17 +56,27 @@ class AvatarNet(nn.Module):
                     b, c, h, w = content_feature[-1].size()
                     mask = F.interpolate(mask, size=(h, w))
                 transformed_feature.append(self.decorator(content_feature[-1], style_feature[-1], style_strength, patch_size, patch_stride) * interpolation_weight * mask)
-            transformed_feature = sum(transformed_feature)
+                
+            transformed_feature = sum(transformed_feature) # this is, like, suming all the styles, 
+            
 
         else:
             transformed_feature = content_feature[-1]
 
         # re-ordering style features for transferring feature during decoding
-        style_features = [style_feature[:-1][::-1] for style_feature in style_features]
+        # change this,to a anothe variable, to not change the original style features
+        style_features_decoder = [style_feature[:-1][::-1] for style_feature in style_features]
         
-        stylized_image = self.decoder(transformed_feature, style_features, masks, interpolation_weights)
+        stylized_image = self.decoder(transformed_feature, style_features_decoder, masks, interpolation_weights)
+        
+        # re-encode the re-constructed image
+        re_content_feature = self.encoder(stylized_image)
+        re_style_features = []
+        # for now, keep this to 1, 
+        re_style_features.append(self.encoder(stylized_image))
 
-        return stylized_image
+        # return the images and four features
+        return stylized_image, content_feature, re_content_feature, style_features, re_style_features
 
 class AdaIN(nn.Module):
     def __init__(self):

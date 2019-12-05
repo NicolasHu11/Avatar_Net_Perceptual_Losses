@@ -16,10 +16,10 @@ def build_parser():
                     help='Train flag', default=False)
 
     parser.add_argument('--max-iter', type=int,
-                    help='Train iterations', default=40000)
+                    help='Train iterations', default=10)
 
     parser.add_argument('--batch-size', type=int,
-                    help='Batch size', default=16)
+                    help='Batch size', default=8)
 
     parser.add_argument('--lr', type=float,
                     help='Learning rate to optimize network', default=1e-3)
@@ -28,7 +28,7 @@ def build_parser():
                     help='Number of iteration to check training logs', default=100)
 
     parser.add_argument('--imsize', type=int,
-                    help='Size for resize image during training', default=512)
+                    help='Size for resize image during training', default=176)
 
     parser.add_argument('--cropsize', type=int,
                     help='Size for crop image durning training', default=None)
@@ -38,6 +38,7 @@ def build_parser():
 
     parser.add_argument('--layers', type=int, nargs='+',
                     help='Layer indices to extract features', default=[1, 6, 11, 20])
+    # what's this one???
 
     parser.add_argument('--feature-weight', type=float,
                     help='Feautre loss weight', default=0.1)
